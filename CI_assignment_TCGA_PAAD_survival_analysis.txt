@@ -337,27 +337,31 @@ dim(rna.data3)
 cor.test(as.numeric(rna.data3["SEC61A2",]), as.numeric(cnv.data2["SEC61A2",]), method = "spearman")
 
 
-# Calculate the gene amplification and deletion counts of SEC61A2 gene 
+# Count the number of Amp and Del events using thresholded CNV dataset 
 
-# Numeric focal-level Copy Number Variation (CNV) values were generated with "Masked Copy Number Segment" files from tumor aliquots using GISTIC2. Only protein-coding genes were kept, and their numeric CNV values were further thresholded by a noise cutoff of 0.3 
+wget https://tcga-xena-hub.s3.us-east-1.amazonaws.com/download/TCGA.PAAD.sampleMap%2FGistic2_CopyNumber_Gistic2_all_thresholded.by_genes.gz
 
-# Genes with focal CNV values smaller than -0.3 are categorized as a "loss" (-1)
-# Genes with focal CNV values larger than 0.3 are categorized as a "gain" (+1)
-# Genes with focal CNV values between and including -0.3 and 0.3 are categorized as "neutral" (0).
+mv TCGA.PAAD.sampleMap%2FGistic2_CopyNumber_Gistic2_all_thresholded.by_genes.gz TCGA.PAAD.CNV_thresholded.gz 
 
-# https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/CNV_Pipeline/
+gunzip TCGA.PAAD.CNV_thresholded.gz 
 
-cnv.data_SEC61A2 <- cnv.data2["SEC61A2",]
-total <- length(cnv.data_SEC61A2)
-gain <- apply(cnv.data2,MARGIN = 1, function(x)sum(x> 0.3)) 
-loss <- apply(cnv.data2,MARGIN = 1, function(x)sum(x< -0.3))
-neutral <- apply(cnv.data2, MARGIN = 1, function(x)sum(abs(x)<0.3))
 
-cnv.frame <- data.frame(ID=rownames(cnv.data2), AmpCount = gain, DelCount=loss, Neutral = neutral, Total = total)
+cnv.data.thresholded <- read.table("TCGA.PAAD.CNV_thresholded", sep="\t", header=T, row.names=1)
+
+# -2,-1,0,1,2: 2 copy del, 1 copy del, no change, amplification, high-amplification
+# Using a cut-off value of 1 to calculate amplification and deletion events 
+
+total <- length(cnv.data.thresholded)
+gain <- apply(cnv.data.thresholded,MARGIN = 1, function(x)sum(x> = 1)) 
+loss <- apply(cnv.data.thresholded,MARGIN = 1, function(x)sum(x< = -1))
+neutral <- apply(cnv.data.thresholded, MARGIN = 1, function(x)sum(x= 0))
+
+cnv.frame <- data.frame(ID=rownames(cnv.data.thresholded), AmpCount = gain, DelCount=loss, Neutral = neutral, Total = total)
 
 dim(cnv.frame)
 
 cnv.frame[which(cnv.frame$ID=="SEC61A2"),]
+
 
 #Save workspace 
 save.image("PAAD_CNV.RData")
