@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script that convert BAM files into fastq files and do the transcript isoform quantification using Salmon
+# Script that convert BAM files into fastq files and do the transcript isoform quantification using Kallisto
 
 
 ## Usage Function
@@ -13,7 +13,7 @@ REQUIRED ARGUMENTS:
         -d 	Directory of where input BAM files are stored.
 
 EXAMPLE USAGE:
-   >> ~/02_Salmon_align.sh -d /path/to/data/dir/ 
+   >> ~/01_extract_chr5.sh -d /path/to/data/dir/ 
 
 EOF
 }
@@ -57,9 +57,9 @@ do
 	samtools sort -n $file -o $OUTDIR/sorted.bam
 	samtools fastq -1 $OUTDIR/pair1.fq -2 $OUTDIR/pair2.fq -0 /dev/null -s /dev/null -n $OUTDIR/sorted.bam
 
-	echo "Starting Salmon alignment on $OUTDIR on "`date`
-	salmon quant -i /Users/chensisi/Documents/salmon_tutorial/Homo.sapiens_index -l A -1 $OUTDIR/pair1.fq -2 $OUTDIR/pair2.fq -p 8 --validateMappings -o $OUTDIR/salmon_quants
- 	
+	echo "Starting Kallisto quantification on $OUTDIR on "`date`
+    kallisto quant -i /Users/chensisi/Documents/Ref/homo_sapiens_v96/transcriptome.idx -o $OUTDIR/kallisto_quants pair1.fq pair2.fq
+
  	echo "Deleting temporary files ..." 
  	rm $OUTDIR/pair1.fq
  	rm $OUTDIR/pair2.fq
@@ -71,12 +71,6 @@ do
 done
 
 echo "Completed Isoform quantification on "`date`
-
-
-
-
-
-
 
 
 
